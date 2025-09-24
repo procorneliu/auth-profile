@@ -15,6 +15,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/accessToken.guard';
+import { ConfigService } from '@nestjs/config';
+import { AvatarUploadInterceptor } from './interceptors/avatar-upload.interceptor';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -22,7 +24,10 @@ import { extname } from 'path';
 @UseGuards(AccessTokenGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('/:id/avatar')
   @UseInterceptors(
@@ -47,7 +52,9 @@ export class UsersController {
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const avatarUrl = `/uploads/${file.filename}`;
+    const uploadPath = this.configService.getOrThrow('UPLOAD_DIR');
+
+    const avatarUrl = `${uploadPath}/${file.filename}`;
     return this.usersService.updateAvatar(id, avatarUrl);
   }
   @Post()

@@ -10,7 +10,7 @@ export type UserDocument = HydratedDocument<User>;
   versionKey: false,
 }) // with auto creation of createdAt & updatedAt | __v disabled
 export class User {
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({ type: String, required: true, unique: true, index: true })
   email: string;
 
   @Prop({ type: String, required: true, select: false })
