@@ -29,8 +29,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(newUser.id, newUser.email);
 
-    res.cookie('accessToken', tokens.accessToken);
-    res.cookie('refreshToken', tokens.refreshToken);
+    this.setCookies(res, tokens);
 
     return { user: newUser, tokens };
   }
@@ -53,8 +52,7 @@ export class AuthService {
       refresh_token: tokens.refreshToken,
     });
 
-    res.cookie('accessToken', tokens.accessToken);
-    res.cookie('refreshToken', tokens.refreshToken);
+    this.setCookies(res, tokens);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, refresh_token, ...userData } = user.toObject();
@@ -119,5 +117,25 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  setCookies(
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string },
+  ) {
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: false, // set true in production
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 3, // 3 minutes
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: false, // set true in production
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    });
   }
 }
