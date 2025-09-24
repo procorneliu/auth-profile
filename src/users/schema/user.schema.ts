@@ -22,6 +22,9 @@ export class User {
   @Prop({ type: String, required: true })
   lastName: string;
 
+  @Prop({ type: String })
+  avatarUrl: string;
+
   @Prop({ type: String, select: false })
   refresh_token: string | null;
 }

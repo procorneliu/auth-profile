@@ -47,6 +47,10 @@ export class UsersService {
     return user;
   }
 
+  async getMe(id: string) {
+    return await this.userModel.findById(id);
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     const updatedUser = await this.userModel.findByIdAndUpdate(
       id,
@@ -56,6 +60,20 @@ export class UsersService {
     if (!updatedUser) throw new BadRequestException('Updating of user failed!');
 
     return updatedUser;
+  }
+
+  async updateAvatar(id: string, url: string) {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      {
+        avatarUrl: url,
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!user) throw new NotFoundException('User not found!');
+
+    return user;
   }
 
   async remove(id: string) {
