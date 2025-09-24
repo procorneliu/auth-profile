@@ -16,31 +16,40 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/accessToken.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import multer from 'multer';
-import { S3Service } from '../s3/s3.service';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @UseGuards(AccessTokenGuard)
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private s3Service: S3Service,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('/:id/avatar')
   @UseInterceptors(
-    FileInterceptor('avatar', { storage: multer.memoryStorage() }),
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueName = `avatar-${Date.now()}${extname(file.originalname)}`;
+          cb(null, uniqueName);
+        },
+      }),
+      limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+    }),
   )
   async uploadAvatar(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const key = `${id}-${Date.now()}`;
-    const url = await this.s3Service.uploadFile(key, file);
-
-    return this.usersService.updateAvatar(id, url);
+    const avatarUrl = `/uploads/${file.filename}`;
+    return this.usersService.updateAvatar(id, avatarUrl);
   }
-
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);

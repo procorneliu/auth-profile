@@ -5,7 +5,6 @@ import { User, UserSchema } from './schema/user.schema';
 
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { S3Module } from 'src/s3/s3.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { S3Module } from 'src/s3/s3.module';
         schema: UserSchema,
       },
     ]),
-    S3Module,
   ],
   controllers: [UsersController],
   providers: [UsersService],

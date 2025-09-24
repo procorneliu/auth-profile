@@ -3,36 +3,15 @@ services:
     build: .
     ports:
       - '3000:3000'
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/auth-profile
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_REGION=eu-central-1
-      - AWS_ENDPOINT=http://localstack:4566
-      - AWS_S3_BUCKET=avatars
+    env_file:
+      - .env.example
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       - mongo
-      - localstack
 
   mongo:
     image: mongo:7
     restart: always
     ports:
       - '27017:27017'
-
-  localstack:
-    image: localstack/localstack:3.4
-    environment:
-      - SERVICES=s3
-      - DEBUG=1
-      - PERSISTENCE=1
-    volumes:
-      - localstack-data:/var/lib/localstack
-      - ./init-aws:/etc/localstack/init/ready.d
-      - /var/run/docker.sock:/var/run/docker.sock
-
-    ports:
-      - '4566:4566'
-
-volumes:
-  localstack-data:

@@ -66,7 +66,7 @@ export class UsersService {
     const user = await this.userModel.findByIdAndUpdate(
       id,
       {
-        avatarUrl: url,
+        avatarUrl: `http://localhost:3000${url}`,
       },
       { new: true, runValidators: true },
     );
