@@ -1,0 +1,53 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  ForbiddenException,
+  HttpCode,
+  Res,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { AuthDto } from './dto/auth.dto';
+import { AccessTokenGuard } from './guards/accessToken.guard';
+import type { Request, Response } from 'express';
+import { RefreshTokenGuard } from './guards/refreshToken.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post('/signup')
+  signUp(
+    @Body() createUsersDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.signUp(createUsersDto, res);
+  }
+
+  @HttpCode(200)
+  @Post('/signin')
+  signIn(@Body() authDto: AuthDto, @Res({ passthrough: true }) res: Response) {
+    return this.authService.signIn(authDto, res);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Get('/logout')
+  logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(req.user!['sub'], res);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Get('/refresh')
+  refresh(@Req() req: Request) {
+    if (!req.user) throw new ForbiddenException('Access denied');
+
+    const email = req.user['email'];
+    const refreshToken = req.cookies.refreshToken;
+
+    return this.authService.refreshTokens(email, refreshToken);
+  }
+}
