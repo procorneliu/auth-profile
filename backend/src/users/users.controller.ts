@@ -16,7 +16,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/accessToken.guard';
 import { ConfigService } from '@nestjs/config';
-import { AvatarUploadInterceptor } from './interceptors/avatar-upload.interceptor';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -33,7 +32,7 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: `./uploads`,
         filename: (req, file, cb) => {
           const uniqueName = `avatar-${Date.now()}${extname(file.originalname)}`;
           cb(null, uniqueName);

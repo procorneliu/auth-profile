@@ -8,10 +8,13 @@ export default function Profile() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, { withCredentials: true })
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+        withCredentials: true,
+      })
       .then((res) => setUser(res.data))
       .catch(console.error);
   }, []);
@@ -28,23 +31,22 @@ export default function Profile() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const f = e.target.files?.[0];
-  if (f) {
-    if (f.size > 2 * 1024 * 1024) {
-      setError("File is too large. Max size is 2MB.");
-      setFile(null);
-      return;
+    const f = e.target.files?.[0];
+    if (f) {
+      if (f.size > 2 * 1024 * 1024) {
+        setError("File is too large. Max size is 2MB.");
+        setFile(null);
+        return;
+      }
+      if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+        setError("Invalid file type. Only JPG, PNG, or WEBP allowed.");
+        setFile(null);
+        return;
+      }
+      setError(null);
+      setFile(f);
     }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
-      setError("Invalid file type. Only JPG, PNG, or WEBP allowed.");
-      setFile(null);
-      return;
-    }
-    setError(null);
-    setFile(f);
-  }
-};
-
+  };
 
   const handleUpload = async () => {
     if (!file || !user) return;
@@ -66,6 +68,23 @@ export default function Profile() {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!user) return;
+    try {
+      setSaving(true);
+      const res = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}`,
+        { firstName: user.firstName, lastName: user.lastName },
+        { withCredentials: true }
+      );
+      setUser(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!user) return <p>Loading...</p>;
 
   return (
@@ -73,6 +92,7 @@ export default function Profile() {
       <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-md text-gray-700">
         <h1 className="text-xl font-semibold text-center mb-6">Profile</h1>
 
+        {/* Avatar Section */}
         <div className="flex flex-col items-center">
           {user.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -87,7 +107,6 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Hidden input */}
           <input
             type="file"
             accept="image/*"
@@ -95,8 +114,6 @@ export default function Profile() {
             id="avatarInput"
             className="hidden"
           />
-
-          {/* Label as styled button */}
           <label
             htmlFor="avatarInput"
             className="cursor-pointer bg-gray-100 border px-4 py-2 rounded-lg hover:bg-gray-200 transition"
@@ -104,12 +121,8 @@ export default function Profile() {
             Choose Avatar
           </label>
 
-          {/* Show error if file invalid */}
-          {error && (
-            <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-          {/* Upload button */}
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
@@ -119,12 +132,38 @@ export default function Profile() {
           </button>
         </div>
 
+        {/* Editable fields */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700">
+            First name
+          </label>
+          <input
+            type="text"
+            value={user.firstName}
+            onChange={(e) => setUser({ ...user, firstName: e.target.value })}
+            className="w-full border px-3 py-2 rounded-md mt-1"
+          />
 
+          <label className="block text-sm font-medium text-gray-700 mt-4">
+            Last name
+          </label>
+          <input
+            type="text"
+            value={user.lastName}
+            onChange={(e) => setUser({ ...user, lastName: e.target.value })}
+            className="w-full border px-3 py-2 rounded-md mt-1"
+          />
+
+          <button
+            onClick={handleUpdate}
+            disabled={saving}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 w-full hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
 
         <div className="mt-6 text-center">
-          <p className="font-medium">
-            {user.firstName} {user.lastName}
-          </p>
           <p className="text-gray-500 text-sm">{user.email}</p>
         </div>
 
