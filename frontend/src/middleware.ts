@@ -3,14 +3,20 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("accessToken")?.value;
+  const ageConfirmed = request.cookies.get("ageConfirmed")?.value;
   const { pathname } = request.nextUrl;
 
-  // Protect /profile
+  // Age gate check
+  if (!ageConfirmed && !pathname.startsWith("/age-gate")) {
+    return NextResponse.redirect(new URL("/age-gate", request.url));
+  }
+
+  // Protect /profile (auth required)
   if (!token && pathname.startsWith("/profile")) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Prevent logged-in users visiting /login or /register
+  // Prevent logged-in users from accessing /login or /register
   if (
     token &&
     (pathname.startsWith("/login") || pathname.startsWith("/register"))
@@ -22,5 +28,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/login", "/register"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)", // apply globally except assets
+  ],
 };

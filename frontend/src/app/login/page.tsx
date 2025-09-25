@@ -1,65 +1,68 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 
-const Login = () => {
+export default function Login() {
   return (
-    <div className="max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
-      <Formik
-        initialValues={{ email: "", password: "" }}
-        validationSchema={Yup.object({
-          email: Yup.string().email().required("Email is required"),
-          password: Yup.string().required("Password is required"),
-        })}
-        onSubmit={async (values, { setSubmitting, setErrors }) => {
-          try {
-            await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/auth/signin`,
-              values,
-              { withCredentials: true } // cookies for JWT
-            );
-            window.location.href = "/profile";
-          } catch (err: any) {
-            console.error(err);
-            setErrors({ email: "Invalid email or password" });
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      >
-        {({ isSubmitting }) => (
-          <Form className="flex flex-col gap-2">
-            <Field
-              name="email"
-              type="email"
-              placeholder="Email"
-              className="border p-2"
-            />
-            <ErrorMessage name="email" component="div" className="text-red-500" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-md text-gray-700">
+        <h1 className="text-xl font-semibold text-center mb-6">Welcome back!</h1>
 
-            <Field
-              name="password"
-              type="password"
-              placeholder="Password"
-              className="border p-2"
-            />
-            <ErrorMessage name="password" component="div" className="text-red-500" />
+        <Formik
+          initialValues={{ email: "", password: "" }}
+          validationSchema={Yup.object({
+            email: Yup.string().email("Invalid email").required("Email is required"),
+            password: Yup.string().required("Password is required"),
+          })}
+          onSubmit={async (values, { setSubmitting, setErrors }) => {
+            try {
+              await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/auth/signin`,
+                values,
+                { withCredentials: true }
+              );
+              window.location.href = "/profile";
+            } catch {
+              setErrors({ email: "Invalid email or password" });
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form className="flex flex-col gap-4">
+              <div>
+                <Field
+                  name="email"
+                  type="text"
+                  placeholder="Email"
+                  className="w-full border px-3 py-2 rounded-md"
+                />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
+              </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-500 text-white p-2 mt-2"
-            >
-              {isSubmitting ? "Logging in..." : "Login"}
-            </button>
-          </Form>
-        )}
-      </Formik>
+              <div>
+                <Field
+                  name="password"
+                  type="password"
+                  placeholder="Password"
+                  className="w-full border px-3 py-2 rounded-md"
+                />
+                <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                {isSubmitting ? "Logging in..." : "Log in →"}
+              </button>
+            </Form>
+          )}
+        </Formik>
+      </div>
     </div>
   );
-};
-
-export default Login;
+}
