@@ -32,7 +32,7 @@ That’s because the variables here don’t contain truly sensitive data — the
 ### 2. Run with Docker
 
 ```bash
-docker compose up --build
+docker compose up
 ```
 
 Backend: http://localhost:4000/api
